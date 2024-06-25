@@ -7,13 +7,26 @@ import math
 import openai
 import torch
 from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
-
+# import chattool
+# from chattool import async_chat_completion, load_chats, Chat
+import os
+import sys
+# print(os.getcwd())
+# current_path = os.getcwd()
+# module_path = os.path.join(current_path, "Mini-DALLE3/minidalle3")
+# sys.path.append(module_path)
 from .t2i.ip_adapter import IPAdapterXL
+import chattool
+from chattool import *
+
+chattool.api_base = "https://one-api.cubenlp.cn/v1"
+chattool.api_key = "sk-NOAI1gdONO6YnBaR59Bc5b9d079843F49dB14dF9F21aBaCf"
+Chat().get_valid_models(gpt_only=False)
 
 logger = logging.getLogger(__file__)
 
-llm_model_name = "gpt-3.5-turbo"
-
+llm_model_name = "glm-3-turbo"
+roy = Chat(model=llm_model_name)
 
 def user(content):
     return {"role": "user", "content": content}
@@ -24,12 +37,14 @@ def ai(content):
 
 
 def chat(messages):
-    result = openai.ChatCompletion.create(
-        model=llm_model_name,
-        messages=messages,
-        temperature=0,
-    )
-    response = result["choices"][0]["message"]["content"]
+    # result = openai.ChatCompletion.create(
+    #     model="chatglm_turbo",
+    #     messages=messages,
+    #     temperature=0,
+    # )
+    # response = result["choices"][0]["message"]["content"]
+    roy.user(messages)
+    response=roy.getresponse(max_tries=4)
     logger.info(response)
     return response
 
@@ -62,14 +77,15 @@ def image_grid(imgs):
 class APIPool:
     def __init__(
         self,
-        base_model_path="stabilityai/stable-diffusion-xl-base-1.0",
-        image_encoder_path="checkpoints/sdxl_models/image_encoder",
-        ip_ckpt="checkpoints/sdxl_models/ip-adapter_sdxl.bin",
+        base_model_path="/home/yuxiang/raida/stablediffusion/stable-diffusion-xl-base-1.0",
+        image_encoder_path="/home/yuxiang/raida/IP-Adapter/sdxl_models/image_encoder",
+        ip_ckpt="/home/yuxiang/raida/IP-Adapter/sdxl_models/ip-adapter_sdxl.bin",
         device="cuda",
     ) -> None:
         # load SDXL pipeline
         self.pipe = StableDiffusionXLPipeline.from_pretrained(
             base_model_path,
+            variant='fp16',
             torch_dtype=torch.float16,
             add_watermarker=False,
             # local_files_only=True,
@@ -80,6 +96,7 @@ class APIPool:
 
         self.t2i = DiffusionPipeline.from_pretrained(
             base_model_path,
+            variant='fp16',
             torch_dtype=torch.float16,
             add_watermarker=False,
             local_files_only=True,
@@ -165,7 +182,7 @@ class MiniDALLE3:
         if prompt_path is None:
             prompt_path = DEFAULT_PROMPT
         self.system_message = {"role": "system", "content": open(prompt_path, "r").read().strip()}
-
+        print(self.system_message)
     def ask(self, history_messages, history_images):
         output = chat(history_messages)
 

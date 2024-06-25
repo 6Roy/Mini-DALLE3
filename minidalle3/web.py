@@ -5,8 +5,20 @@ import uuid
 import os
 import datetime
 import json
-
-from .model import MiniDALLE3
+import os
+import sys
+from transformers import AutoModel, AutoTokenizer
+import gradio as gr
+import tempfile
+import os
+os.makedirs("./tmp", exist_ok=True)
+tempfile.tempdir = "./tmp"
+current_path = os.getcwd()
+module_path = os.path.join(current_path, "Mini-DALLE3")
+sys.path.append(module_path)
+# current_path = os.getcwd()
+# print("当前路径：", current_path)
+from minidalle3.model import MiniDALLE3
 
 
 logging.basicConfig(
@@ -54,6 +66,7 @@ def bot(history, state, allowed, request: gr.Request):
         return history, state
 
     state["messages"].append(user(history[-1][0]))
+    print(state["messages"])
     raw_output, response = state["model"].ask(state["messages"], state["images"])
     state["messages"].append(ai(raw_output))
 

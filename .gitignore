@@ -12,6 +12,8 @@ build/
 develop-eggs/
 dist/
 downloads/
+saved/
+tmp/
 eggs/
 .eggs/
 lib/
@@ -33,6 +35,8 @@ MANIFEST
 *.spec
 
 # Installer logs
+sentCls_10.ipynb
+test.ipynb
 pip-log.txt
 pip-delete-this-directory.txt
 
